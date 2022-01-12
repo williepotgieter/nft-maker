@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  app:
+    container_name: nft-maker
+    image: golang:1.17-alpine3.15
+    networks:
+      - private
+    volumes:
+      - ./:/go/app
+      - app-pkg:/go/pkg/mod
+    working_dir: /go/app
+    command: go run cmd/main.go
+    restart: always
+
+  database:
+    container_name: mariadb
+    image: mariadb:10.6.5-focal
+    environment:
+      - MYSQL_ROOT_PASSWORD=example
+    networks:
+      - private
+    volumes:
+      - app-db:/var/lib/mysql
+    restart: always
+
+  admin:
+    container_name: db-admin
+    image: phpmyadmin:5.1.1-fpm-alpine
+    networks:
+      - private
+    restart: always
+
+networks:
+  private:
+    driver: bridge
+
+volumes:
+  app-pkg:
+  app-db:
