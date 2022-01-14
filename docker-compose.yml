@@ -11,6 +11,8 @@ services:
       - app-pkg:/go/pkg/mod
     working_dir: /go/app
     command: go run cmd/main.go
+    depends_on:
+      - database
     restart: always
 
   database:
@@ -19,17 +21,44 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=example
     networks:
-      - private
+      private:
+        aliases:
+          - db
     volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - app-db:/var/lib/mysql
     restart: always
 
-  admin:
-    container_name: db-admin
-    image: phpmyadmin:5.1.1-fpm-alpine
+  db_admin:
+    container_name: phpmyadmin
+    image: phpmyadmin:5.1.1
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=example
+    ports:
+      - 2000:80
     networks:
       - private
+    depends_on:
+      - database
     restart: always
+    
+    
+
+  # db_admin:
+  #   container_name: phpmyadmin
+  #   # image: phpmyadmin:5.1.1-fpm-alpine
+  #   image: phpmyadmin
+  #   environment:
+  #     - PMA_ARBITRARY=1
+  #   ports:
+  #     - 6000:80
+  #   networks:
+  #     - private
+  #   depends_on:
+  #     - database
+  #   restart: always
 
 networks:
   private:
