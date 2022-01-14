@@ -4,8 +4,12 @@ services:
   app:
     container_name: nft-maker
     image: golang:1.17-alpine3.15
+    environment:
+      - TZ=Africa/Johannesburg
     networks:
-      - private
+      private:
+        aliases:
+          - nft-maker-app
     volumes:
       - ./:/go/app
       - app-pkg:/go/pkg/mod
@@ -20,10 +24,11 @@ services:
     image: mariadb:10.6.5-focal
     environment:
       - MYSQL_ROOT_PASSWORD=example
+      - TZ=Africa/Johannesburg
     networks:
       private:
         aliases:
-          - db
+          - nft-maker-db
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - app-db:/var/lib/mysql
@@ -33,34 +38,35 @@ services:
     container_name: phpmyadmin
     image: phpmyadmin:5.1.1
     environment:
-      - PMA_HOST=db
+      - PMA_HOST=nft-maker-db
       - PMA_USER=root
       - PMA_PASSWORD=example
-    ports:
-      - 2000:80
+      - TZ=Africa/Johannesburg
     networks:
       - private
     depends_on:
       - database
     restart: always
-    
-    
 
-  # db_admin:
-  #   container_name: phpmyadmin
-  #   # image: phpmyadmin:5.1.1-fpm-alpine
-  #   image: phpmyadmin
-  #   environment:
-  #     - PMA_ARBITRARY=1
-  #   ports:
-  #     - 6000:80
-  #   networks:
-  #     - private
-  #   depends_on:
-  #     - database
-  #   restart: always
+  # HAProxy
+  proxy:
+    container_name: haproxy
+    image: haproxy:2.5-alpine3.15
+    environment:
+      - TZ=Africa/Johannesburg
+    ports:
+      - "5000:8080"
+    networks:
+      - public
+      - private
+    volumes:
+      - "./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+    restart: always
+    
 
 networks:
+  public:
+    driver: bridge
   private:
     driver: bridge
 
