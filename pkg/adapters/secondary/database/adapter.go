@@ -9,18 +9,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const CREATE_USER = "create_user"
+
 type dbadapter struct {
-	db *sql.DB
+	db         *sql.DB
+	statements map[string]*sql.Stmt
 }
 
 func NewDBAdapter() *dbadapter {
 	var (
-		db  *sql.DB
-		uri string
-		err error
+		db    *sql.DB
+		stmts = make(map[string]*sql.Stmt)
+		uri   string
+		err   error
 	)
 
-	uri = fmt.Sprintf("root:%s@tcp(db:3306)/nftmaker", os.Getenv("MYSQL_ROOT_PASSWORD"))
+	uri = fmt.Sprintf("%s:%s@tcp(nft-maker-db:3306)/%s", os.Getenv("MARIADB_USER"), os.Getenv("MARIADB_PASSWORD"), os.Getenv("MARIADB_NAME"))
 
 	db, err = sql.Open("mysql", uri)
 	if err != nil {
@@ -29,10 +33,29 @@ func NewDBAdapter() *dbadapter {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatalln("db connection failed")
+		log.Fatalln("db connection failed", err)
 	} else {
 		log.Println("connected to database...")
 	}
 
-	return &dbadapter{db}
+	stmts = PrepareStatements(db)
+
+	return &dbadapter{db, stmts}
+}
+
+func PrepareStatements(db *sql.DB) map[string]*sql.Stmt {
+	var (
+		prepStmts = make(map[string]*sql.Stmt)
+		err       error
+	)
+
+	// Create a new user
+	prepStmts[CREATE_USER], err = db.Prepare(`
+	INSERT INTO users (created_at, modified_at, uuid, name, surname, email, password)
+	VALUES (?, ?, ?, ?, ?, ?, ?);`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return prepStmts
 }

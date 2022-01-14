@@ -8,5 +8,4 @@ type User struct {
 	Surname    string `json:"surname"`
 	Email      string `json:"email"`
 	Password   string `json:"Password"`
-	Verified   bool   `json:"verified"`
 }

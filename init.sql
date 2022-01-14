@@ -7,7 +7,6 @@ name VARCHAR(255) NOT NULL,
 surname VARCHAR(255) NOT NULL,
 email VARCHAR(255) NOT NULL,
 password VARCHAR(255) NOT NULL,
-verified VARCHAR(255) NOT NULL,
 created_at INT NOT NULL,
 modified_at INT NOT NULL,
 PRIMARY KEY (uuid)

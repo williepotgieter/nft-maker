@@ -1,16 +1,12 @@
-package adding
-
-import (
-	"github.com/williepotgieter/nft-maker/pkg/domain/models"
-)
+package updating
 
 // Database service
 type Database interface {
-	CreateUser(user models.User) error
+	CloseDBConn() error
 }
 
 type DatabaseService interface {
-	User(user models.User) error
+	CloseConn() error
 }
 
 type dbservice struct {

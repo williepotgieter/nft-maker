@@ -6,6 +6,10 @@ services:
     image: golang:1.17-alpine3.15
     environment:
       - TZ=Africa/Johannesburg
+      - PORT=8080
+      - MARIADB_NAME=nftmaker
+      - MARIADB_USER=root
+      - MARIADB_PASSWORD=example
     networks:
       private:
         aliases:
@@ -23,7 +27,7 @@ services:
     container_name: mariadb
     image: mariadb:10.6.5-focal
     environment:
-      - MYSQL_ROOT_PASSWORD=example
+      - MARIADB_ROOT_PASSWORD=example
       - TZ=Africa/Johannesburg
     networks:
       private:

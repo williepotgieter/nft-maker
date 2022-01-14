@@ -35,6 +35,5 @@ func (s *dbservice) User(user models.User) error {
 		Surname:    user.Surname,
 		Email:      user.Email,
 		Password:   hashedPassword,
-		Verified:   false,
 	})
 }
