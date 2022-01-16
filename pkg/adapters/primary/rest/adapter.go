@@ -37,6 +37,7 @@ func (a *restadapter) InitV1Routes() {
 
 	// Users endpoints
 	users.Post("/", a.handleCreateNewUser)
+	users.Get("/", a.handleGetAllUsers)
 
 }
 

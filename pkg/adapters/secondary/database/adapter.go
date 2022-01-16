@@ -9,7 +9,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-const CREATE_USER = "create_user"
+const (
+	CREATE_USER   = "create_user"
+	GET_ALL_USERS = "get_all_users"
+)
 
 type dbadapter struct {
 	db         *sql.DB
@@ -53,6 +56,13 @@ func PrepareStatements(db *sql.DB) map[string]*sql.Stmt {
 	prepStmts[CREATE_USER], err = db.Prepare(`
 	INSERT INTO users (created_at, modified_at, uuid, name, surname, email, password)
 	VALUES (?, ?, ?, ?, ?, ?, ?);`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Get all users
+	prepStmts[GET_ALL_USERS], err = db.Prepare(`
+	SELECT uuid, name, surname, email, created_at, modified_at FROM users;`)
 	if err != nil {
 		log.Fatalln(err)
 	}

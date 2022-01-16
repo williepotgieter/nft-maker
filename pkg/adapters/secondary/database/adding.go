@@ -17,7 +17,6 @@ func (a *dbadapter) CreateUser(user models.User) error {
 		return err
 	}
 	defer tx.Rollback()
-	defer a.statements[CREATE_USER].Close()
 
 	_, err = a.statements[CREATE_USER].Exec(
 		user.CreatedAt,
