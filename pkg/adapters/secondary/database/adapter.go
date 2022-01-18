@@ -10,8 +10,10 @@ import (
 )
 
 const (
+	// SQL Statement names
 	CREATE_USER   = "create_user"
 	GET_ALL_USERS = "get_all_users"
+	GET_USER      = "get_user"
 )
 
 type dbadapter struct {
@@ -63,6 +65,13 @@ func PrepareStatements(db *sql.DB) map[string]*sql.Stmt {
 	// Get all users
 	prepStmts[GET_ALL_USERS], err = db.Prepare(`
 	SELECT uuid, name, surname, email, created_at, modified_at FROM users;`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Get specific user
+	prepStmts[GET_USER], err = db.Prepare(`
+	SELECT uuid, name, surname, email, created_at, modified_at FROM users WHERE uuid = ?;`)
 	if err != nil {
 		log.Fatalln(err)
 	}
