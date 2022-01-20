@@ -11,10 +11,11 @@ import (
 
 const (
 	// SQL Statement names
-	CREATE_USER   = "create_user"
-	GET_ALL_USERS = "get_all_users"
-	GET_USER      = "get_user"
-	UPDATE_EMAIL  = "update_email"
+	CREATE_USER     = "create_user"
+	GET_ALL_USERS   = "get_all_users"
+	GET_USER        = "get_user"
+	UPDATE_EMAIL    = "update_email"
+	UPDATE_PASSWORD = "update_password"
 )
 
 type dbadapter struct {
@@ -82,6 +83,15 @@ func PrepareStatements(db *sql.DB) map[string]*sql.Stmt {
 	prepStmts[UPDATE_EMAIL], err = db.Prepare(`
 	UPDATE users
 	SET email = ?
+	WHERE uuid = ?;`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Update user password
+	prepStmts[UPDATE_PASSWORD], err = db.Prepare(`
+	UPDATE users
+	SET password = ?
 	WHERE uuid = ?;`)
 	if err != nil {
 		log.Fatalln(err)

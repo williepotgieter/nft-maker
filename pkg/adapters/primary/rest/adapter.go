@@ -46,6 +46,7 @@ func (a *restadapter) InitV1Routes() {
 	users.Get("/", a.handleGetAllUsers)
 	users.Get("/:uuid", a.handleGetUser)
 	users.Patch("/:uuid/email", a.handleUpdateEmail)
+	users.Patch("/:uuid/password", a.handleUpdatePassword)
 }
 
 func (a *restadapter) Run() {
