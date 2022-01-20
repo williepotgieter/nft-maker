@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -12,8 +13,9 @@ import (
 )
 
 type restadapter struct {
-	app *fiber.App
-	db  *repository.DatabasePort
+	app      *fiber.App
+	db       *repository.DatabasePort
+	validate *validator.Validate
 }
 
 func NewRESTAdapter(db *repository.DatabasePort) *restadapter {
@@ -25,7 +27,11 @@ func NewRESTAdapter(db *repository.DatabasePort) *restadapter {
 	app.Use(cors.New(cors.ConfigDefault))
 	app.Use(logger.New())
 
-	return &restadapter{app, db}
+	return &restadapter{
+		app:      app,
+		db:       db,
+		validate: validator.New(),
+	}
 }
 
 func (a *restadapter) InitV1Routes() {
@@ -39,7 +45,7 @@ func (a *restadapter) InitV1Routes() {
 	users.Post("/", a.handleCreateNewUser)
 	users.Get("/", a.handleGetAllUsers)
 	users.Get("/:uuid", a.handleGetUser)
-
+	users.Patch("/:uuid/email", a.handleUpdateEmail)
 }
 
 func (a *restadapter) Run() {

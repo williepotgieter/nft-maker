@@ -14,6 +14,7 @@ const (
 	CREATE_USER   = "create_user"
 	GET_ALL_USERS = "get_all_users"
 	GET_USER      = "get_user"
+	UPDATE_EMAIL  = "update_email"
 )
 
 type dbadapter struct {
@@ -71,7 +72,17 @@ func PrepareStatements(db *sql.DB) map[string]*sql.Stmt {
 
 	// Get specific user
 	prepStmts[GET_USER], err = db.Prepare(`
-	SELECT uuid, name, surname, email, created_at, modified_at FROM users WHERE uuid = ?;`)
+	SELECT uuid, name, surname, email, created_at, modified_at FROM users
+	WHERE uuid = ?;`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Update user email address
+	prepStmts[UPDATE_EMAIL], err = db.Prepare(`
+	UPDATE users
+	SET email = ?
+	WHERE uuid = ?;`)
 	if err != nil {
 		log.Fatalln(err)
 	}
