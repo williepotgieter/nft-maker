@@ -1,13 +1,14 @@
 package main
 
-import "fmt"
-
-var nftmaker *DBConn
-
-func init() {
-	nftmaker := NewDBConn("nftmaker.db")
-}
+const (
+	APP_NAME    string = "NFT Maker v0.0.1"
+	DB_FILENAME string = "nftmaker.db"
+	PORT        uint16 = 3000
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	db := NewDBConn(DB_FILENAME)
+	api := NewRestAPI(APP_NAME, db)
+
+	api.Run(PORT)
 }

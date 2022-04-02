@@ -1,2 +1,2 @@
 dev:
-	go run app/main.go
+	go run app/*.go
