@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
-	_ "nft-maker/docs"
+	docs "nft-maker/docs"
 
 	swagger "github.com/arsmn/fiber-swagger/v2"
 )
@@ -33,23 +33,21 @@ func NewRestAPI(name string, c *DBConn) *RestApi {
 	return &RestApi{c, app, v}
 }
 
-// @title Fiber Example API
-// @version 1.0
-// @description This is a sample swagger for Fiber
+// @title NFT Maker API
+// @version 0.0.1
+// @description Simple API to demonstrate the creation of NFT's on the Algorand blockchain, stored on ipfs.
 // @termsOfService http://swagger.io/terms/
 // @contact.name API Support
-// @contact.email fiber@swagger.io
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host localhost:3000
-// @BasePath /
+// @BasePath /api/v1
 
 func (s *RestApi) Run(port uint16) {
 	// Add routes
 	s.setupV1Routes()
 
 	// Add swagger
-	s.setupSwagger()
+	s.setupSwagger(port)
 
 	s.app.Listen(fmt.Sprintf("localhost:%d", port))
 }
@@ -67,6 +65,7 @@ func (s *RestApi) setupV1Routes() {
 	users.Delete("/:id", s.HandleDeleteUser)
 }
 
-func (s *RestApi) setupSwagger() {
+func (s *RestApi) setupSwagger(port uint16) {
+	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%d", port)
 	s.app.Get("/swagger/*", swagger.HandlerDefault)
 }

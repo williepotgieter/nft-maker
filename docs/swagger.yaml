@@ -1,15 +1,207 @@
-basePath: /
-host: localhost:3000
+basePath: /api/v1
+definitions:
+  main.HTTPResp:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  main.UserPassword:
+    properties:
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  main.UserRegistration:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 1
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  main.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
 info:
   contact:
-    email: fiber@swagger.io
     name: API Support
-  description: This is a sample swagger for Fiber
+  description: Simple API to demonstrate the creation of NFT's on the Algorand blockchain,
+    stored on ipfs.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Fiber Example API
-  version: "1.0"
-paths: {}
+  title: NFT Maker API
+  version: 0.0.1
+paths:
+  /users:
+    get:
+      description: Lists all users stored in the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.UserResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: List all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Delete a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.UserResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Get details of a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.UserResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: Specific user details
+      tags:
+      - users
+  /users/{id}/password:
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing user's password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New password
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/main.UserPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.UserResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: Update password
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: New user details
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/main.UserRegistration'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: Create a new user
+      tags:
+      - users
 swagger: "2.0"

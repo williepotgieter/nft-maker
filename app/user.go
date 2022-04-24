@@ -88,8 +88,18 @@ func (c *DBConn) DeleteUser(id uint) (err error) {
 	return
 }
 
-// HandleRegisterNewUser is a http handler function
-// used to save a new user to the database
+// HandleRegisterNewUser godoc
+// @Summary      Create a new user
+// @Description  Register a new user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        Body    body     UserRegistration  true  "New user details"
+// @Success      201  {object} HTTPResp
+// @Failure      400  {object}  HTTPResp
+// @Failure      409  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /users/register [post]
 func (s *RestApi) HandleRegisterNewUser(c *fiber.Ctx) error {
 	var (
 		user = UserRegistration{}
@@ -117,8 +127,14 @@ func (s *RestApi) HandleRegisterNewUser(c *fiber.Ctx) error {
 	return httpResponse(c, fiber.StatusCreated, "successfully registered new user")
 }
 
-// HandleGetAllUsers is a http handler function that
-// returns a list of all users stored in the database
+// HandleGetAllUsers godoc
+// @Summary      List all users
+// @Description  Lists all users stored in the database
+// @Tags         users
+// @Produce      json
+// @Success      200  {array} UserResponse
+// @Failure      500  {object}  HTTPResp
+// @Router       /users [get]
 func (s *RestApi) HandleGetAllUsers(c *fiber.Ctx) error {
 	var (
 		users    []User
@@ -144,8 +160,17 @@ func (s *RestApi) HandleGetAllUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// HandleGetUser is a http handler function that
-// returns the details of a specific user
+// HandleGetUser godoc
+// @Summary      Specific user details
+// @Description  Get details of a specific user
+// @Tags         users
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {array} UserResponse
+// @Failure      400  {object}  HTTPResp
+// @Failure      404  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /users/{id} [get]
 func (s *RestApi) HandleGetUser(c *fiber.Ctx) error {
 	var (
 		id   int
@@ -172,8 +197,18 @@ func (s *RestApi) HandleGetUser(c *fiber.Ctx) error {
 	})
 }
 
-// HandleUpdateUserPassword is a http handler function that
-// updates an existing user's password
+// HandleUpdateUserPassword godoc
+// @Summary      Update password
+// @Description  Updates an existing user's password
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Param        Body    body     UserPassword  true  "New password"
+// @Success      200  {array} UserResponse
+// @Failure      400  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /users/{id}/password [patch]
 func (s *RestApi) HandleUpdateUserPassword(c *fiber.Ctx) error {
 	var (
 		id             int
@@ -210,8 +245,16 @@ func (s *RestApi) HandleUpdateUserPassword(c *fiber.Ctx) error {
 	return httpResponse(c, fiber.StatusOK, "successfully updated user password")
 }
 
-// HandleDeleteUser is a http handler function that
-// deletes a specific user
+// HandleDeleteUser godoc
+// @Summary      Delete user
+// @Description  Delete a specific user
+// @Tags         users
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {array} UserResponse
+// @Failure      400  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /users/{id} [delete]
 func (s *RestApi) HandleDeleteUser(c *fiber.Ctx) error {
 	var (
 		id  int
