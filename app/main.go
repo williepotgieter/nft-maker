@@ -37,9 +37,8 @@ func init() {
 
 func main() {
 	db := NewDBConn(DB_FILENAME)
-	api := NewRestAPI(APP_NAME, db)
-
-	NewAlgodClient(ALGOD_ADDRESS, PS_TOKEN_KEY, PS_TOKEN)
+	bc := NewAlgodClient(ALGOD_ADDRESS, PS_TOKEN_KEY, PS_TOKEN)
+	api := NewRestAPI(APP_NAME, db, bc)
 
 	api.Run(PORT)
 }

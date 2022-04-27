@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ed25519"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"time"
 
@@ -26,6 +27,7 @@ type Account struct {
 type AccountResponse struct {
 	ID        uint      `json:"id"`
 	Address   string    `json:"address"`
+	Balance   uint64    `json:"balance"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -104,6 +106,7 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 		userId   int
 		accounts []Account
 		response []AccountResponse = []AccountResponse{}
+		balance  uint64
 		err      error
 	)
 
@@ -119,9 +122,14 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 	}
 
 	for _, account := range accounts {
+		balance, err = s.Blockchain.CheckAccountBalance(account.Address)
+		if err != nil {
+			return httpResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("error while trying to retrieve account balance for %s\n", account.Address))
+		}
 		response = append(response, AccountResponse{
 			ID:        account.ID,
 			Address:   account.Address,
+			Balance:   balance,
 			CreatedAt: account.CreatedAt.UTC(),
 		})
 	}

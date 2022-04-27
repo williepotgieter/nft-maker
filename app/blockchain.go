@@ -13,11 +13,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/mnemonic"
 )
 
-type AlgodClient struct {
+type Blockchain struct {
 	client *algod.Client
 }
 
-func NewAlgodClient(algodAddress, psTokenKey, psToken string) *AlgodClient {
+func NewAlgodClient(algodAddress, psTokenKey, psToken string) *Blockchain {
 	var (
 		commonClient *common.Client
 		algodClient  *algod.Client
@@ -42,7 +42,7 @@ func NewAlgodClient(algodAddress, psTokenKey, psToken string) *AlgodClient {
 	log.Printf("algod time since last round: %d\n", nodeStatus.TimeSinceLastRound)
 	log.Printf("algod catchup: %d\n", nodeStatus.CatchupTime)
 
-	return &AlgodClient{algodClient}
+	return &Blockchain{algodClient}
 }
 
 func CreateAlgorandAccount() (address, passphrase string, privatekey ed25519.PrivateKey, err error) {
@@ -53,6 +53,20 @@ func CreateAlgorandAccount() (address, passphrase string, privatekey ed25519.Pri
 	passphrase, err = mnemonic.FromPrivateKey(privatekey)
 
 	address = account.Address.String()
+
+	return
+}
+
+func (bc *Blockchain) CheckAccountBalance(address string) (balance uint64, err error) {
+	var accountInfo models.Account
+
+	accountInfo, err = bc.client.AccountInformation(address).Do(context.Background())
+	if err != nil {
+		log.Printf("error getting Algorand account info: %s\n", err)
+		return
+	}
+
+	balance = accountInfo.Amount
 
 	return
 }

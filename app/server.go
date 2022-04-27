@@ -15,11 +15,12 @@ import (
 
 type RestApi struct {
 	*DBConn
+	*Blockchain
 	app      *fiber.App
 	validate *validator.Validate
 }
 
-func NewRestAPI(name string, c *DBConn) *RestApi {
+func NewRestAPI(name string, c *DBConn, a *Blockchain) *RestApi {
 	app := fiber.New(fiber.Config{
 		AppName: name,
 	})
@@ -30,7 +31,7 @@ func NewRestAPI(name string, c *DBConn) *RestApi {
 
 	v := validator.New()
 
-	return &RestApi{c, app, v}
+	return &RestApi{c, a, app, v}
 }
 
 // @title NFT Maker API
