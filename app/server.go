@@ -63,6 +63,11 @@ func (s *RestApi) setupV1Routes() {
 	users.Get("/:id", s.HandleGetUser)
 	users.Patch("/:id/password", s.HandleUpdateUserPassword)
 	users.Delete("/:id", s.HandleDeleteUser)
+
+	// Accounts endpoints
+	accounts := v1.Group("/accounts")
+	accounts.Post("/:userId/new", s.HandleCreateNewAlgorandAccount)
+	accounts.Get("/:userId/all", s.HandleGetUserAccounts)
 }
 
 func (s *RestApi) setupSwagger(port uint16) {

@@ -18,14 +18,14 @@ type UserRegistration struct {
 type User struct {
 	gorm.Model
 	UserRegistration
+	Accounts []Account `gorm:"constraint:OnDelete:CASCADE;"`
 }
-
 type UserResponse struct {
-	ID        uint   `json:"id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
+	ID        uint      `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
 }
 
 // SaveNewUser CREATES a new user in the database
@@ -45,6 +45,7 @@ func (c *DBConn) SaveNewUser(newUser UserRegistration) (err error) {
 			},
 		},
 	}).Error
+
 	return
 }
 
@@ -150,8 +151,8 @@ func (s *RestApi) HandleGetAllUsers(c *fiber.Ctx) error {
 	for _, user := range users {
 		response = append(response, UserResponse{
 			ID:        user.ID,
-			CreatedAt: user.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+			CreatedAt: user.CreatedAt.UTC(),
+			UpdatedAt: user.UpdatedAt.UTC(),
 			Name:      user.Name,
 			Email:     user.Email,
 		})
@@ -190,8 +191,8 @@ func (s *RestApi) HandleGetUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(UserResponse{
 		ID:        user.ID,
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+		CreatedAt: user.CreatedAt.UTC(),
+		UpdatedAt: user.UpdatedAt.UTC(),
 		Name:      user.Name,
 		Email:     user.Email,
 	})

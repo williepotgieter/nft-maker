@@ -26,10 +26,15 @@ func NewDBConn(file string) *DBConn {
 	log.Println("Successfully connected to database!")
 
 	// Migrate db schema
-	err = db.AutoMigrate(&User{})
+	err = db.AutoMigrate(&User{}, &Account{})
 	if err != nil {
 		panic("failed to automigrate database")
 	}
+
+	if res := db.Exec("PRAGMA foreign_keys = ON", nil); res.Error != nil {
+		panic(res.Error)
+	}
+
 	log.Println("Database automigration completed...")
 
 	return &DBConn{db}
