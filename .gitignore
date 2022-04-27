@@ -16,3 +16,7 @@
 
 # SQLite database files
 *.db
+
+# Credentials
+api.yml
+api.yaml

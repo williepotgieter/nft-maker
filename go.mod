@@ -9,6 +9,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.31.0
 	github.com/swaggo/swag v1.8.1
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gorm.io/driver/sqlite v1.3.1
 	gorm.io/gorm v1.23.3
 )
@@ -23,6 +24,7 @@ require (
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
