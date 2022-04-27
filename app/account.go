@@ -121,6 +121,7 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 		return httpResponse(c, fiber.StatusInternalServerError, "unable to query user's accounts")
 	}
 
+	// TODO: Refactor to do concurrent blockchain requests
 	for _, account := range accounts {
 		balance, err = s.Blockchain.CheckAccountBalance(account.Address)
 		if err != nil {
