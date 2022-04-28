@@ -62,6 +62,21 @@ func (c *DBConn) GetUserAccounts(userID uint) (accounts []Account, err error) {
 	return
 }
 
+func (c *DBConn) GetUserAccountPrivateKey(address string) (privateKey ed25519.PrivateKey, err error) {
+	var account Account
+	err = c.db.Where("address = ?", address).First(&account).Error
+	if err != nil {
+		return
+	}
+
+	privateKey, err = base64.StdEncoding.DecodeString(account.PrivateKey)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // HandleCreateNewAlgorandAccount godoc
 // @Summary      Create a new account
 // @Description  Create new Algorand account for a specific user
@@ -165,4 +180,35 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 	sort.Slice(response, func(i, j int) bool { return response[i].ID < response[j].ID })
 
 	return c.Status(fiber.StatusOK).JSON(response)
+}
+
+func (s *RestApi) HandleTransferAlgo(c *fiber.Ctx) error {
+	accAddress := c.Params("accAddress")
+
+	privateKey, err := s.GetUserAccountPrivateKey(accAddress)
+	if err != nil {
+		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Demo transaction
+	txn, err := s.Blockchain.BuildAlgoTransferTxn(
+		100000,
+		accAddress,
+		"ZL7MKKYJS56YT26XUNT25JY222REGXCR6OEKDFDPYXQVN36QTTW23YQ7WY",
+		"My first Algo transaction!")
+	if err != nil {
+		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	txID, signedTxn, err := s.Blockchain.SignTxn(privateKey, txn)
+	if err != nil {
+		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	txInfo, err := s.Blockchain.SubmitTxn(txID, signedTxn)
+	if err != nil {
+		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(txInfo)
 }

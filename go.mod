@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
+	github.com/algorand/go-algorand v0.0.0-20220323144801-17c0feef002f // indirect
 	github.com/algorand/go-codec/codec v1.1.8 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect

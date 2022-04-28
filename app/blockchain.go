@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -10,11 +11,21 @@ import (
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/crypto"
+	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
+	"github.com/algorand/go-algorand-sdk/transaction"
+	"github.com/algorand/go-algorand-sdk/types"
 )
 
 type Blockchain struct {
 	client *algod.Client
+}
+
+type AlgoTransaction struct {
+	TransactionInfo []byte           `json:"transaction_info"`
+	DecodedNote     string           `json:"decoded_note"`
+	AmountSent      types.MicroAlgos `json:"amount_sent"`
+	Fee             types.MicroAlgos `json:"fee"`
 }
 
 func NewBlockchainClient(algodAddress, psTokenKey, psToken string) *Blockchain {
@@ -67,6 +78,87 @@ func (bc *Blockchain) CheckAccountBalance(address string) (balance uint64, err e
 	}
 
 	balance = accountInfo.Amount
+
+	return
+}
+
+func (bc *Blockchain) BuildAlgoTransferTxn(amount uint64, fromAddr, toAddr, txNote string) (txn types.Transaction, err error) {
+	var (
+		txParams                                types.SuggestedParams
+		genID                                   string
+		note, genHash                           []byte
+		minFee, firstValidRound, lastValidRound uint64
+	)
+
+	txParams, err = bc.client.SuggestedParams().Do(context.Background())
+	if err != nil {
+		return
+	}
+
+	minFee = transaction.MinTxnFee
+	note = []byte(txNote)
+	genID = txParams.GenesisID
+	genHash = txParams.GenesisHash
+	firstValidRound = uint64(txParams.FirstRoundValid)
+	lastValidRound = uint64(txParams.LastRoundValid)
+
+	txn, err = transaction.MakePaymentTxnWithFlatFee(
+		fromAddr,
+		toAddr,
+		minFee,
+		amount,
+		firstValidRound,
+		lastValidRound,
+		note,
+		"",
+		genID,
+		genHash)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (bc *Blockchain) SignTxn(privateKey ed25519.PrivateKey, txn types.Transaction) (txID string, signedTxn []byte, err error) {
+	txID, signedTxn, err = crypto.SignTransaction(privateKey, txn)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (bc *Blockchain) SubmitTxn(txID string, signedTxn []byte) (txInfo AlgoTransaction, err error) {
+	var (
+		sendResponse string
+		confirmedTxn models.PendingTransactionInfoResponse
+		txnJSON      []byte
+	)
+
+	sendResponse, err = bc.client.SendRawTransaction(signedTxn).Do(context.Background())
+	if err != nil {
+		return
+	}
+
+	log.Printf("Submitted transaction %s\n", sendResponse)
+
+	confirmedTxn, err = future.WaitForConfirmation(bc.client, txID, 4, context.TODO())
+	if err != nil {
+		return
+	}
+
+	txnJSON, err = json.MarshalIndent(confirmedTxn.Transaction.Txn, "", "\t")
+	if err != nil {
+		return
+	}
+
+	txInfo = AlgoTransaction{
+		TransactionInfo: txnJSON,
+		DecodedNote:     string(confirmedTxn.Transaction.Txn.Note),
+		AmountSent:      confirmedTxn.Transaction.Txn.Amount,
+		Fee:             confirmedTxn.Transaction.Txn.Fee,
+	}
 
 	return
 }
