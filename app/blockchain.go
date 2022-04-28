@@ -17,7 +17,7 @@ type Blockchain struct {
 	client *algod.Client
 }
 
-func NewAlgodClient(algodAddress, psTokenKey, psToken string) *Blockchain {
+func NewBlockchainClient(algodAddress, psTokenKey, psToken string) *Blockchain {
 	var (
 		commonClient *common.Client
 		algodClient  *algod.Client

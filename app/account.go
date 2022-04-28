@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -104,9 +105,10 @@ func (s *RestApi) HandleCreateNewAlgorandAccount(c *fiber.Ctx) error {
 func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 	var (
 		userId   int
+		respCh   chan AccountResponse
+		errCh    = make(chan error)
 		accounts []Account
 		response []AccountResponse = []AccountResponse{}
-		balance  uint64
 		err      error
 	)
 
@@ -121,19 +123,46 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 		return httpResponse(c, fiber.StatusInternalServerError, "unable to query user's accounts")
 	}
 
-	// TODO: Refactor to do concurrent blockchain requests
+	// Make concurrent blockchain requests to get balances for all of the user's Algorand accounts
+	respCh = make(chan AccountResponse, len(accounts))
 	for _, account := range accounts {
-		balance, err = s.Blockchain.CheckAccountBalance(account.Address)
-		if err != nil {
-			return httpResponse(c, fiber.StatusInternalServerError, fmt.Sprintf("error while trying to retrieve account balance for %s\n", account.Address))
-		}
-		response = append(response, AccountResponse{
-			ID:        account.ID,
-			Address:   account.Address,
-			Balance:   balance,
-			CreatedAt: account.CreatedAt.UTC(),
-		})
+		go func(accID uint, accAddress string, accCreatedAt time.Time) {
+			var (
+				accBal uint64
+				reqErr error
+			)
+
+			accBal, reqErr = s.Blockchain.CheckAccountBalance(accAddress)
+			if reqErr != nil {
+				errCh <- fmt.Errorf("error while trying to retrieve account balance for %s\n", accAddress)
+			}
+
+			respCh <- AccountResponse{
+				ID:        accID,
+				Address:   accAddress,
+				Balance:   accBal,
+				CreatedAt: accCreatedAt,
+			}
+		}(account.ID, account.Address, account.CreatedAt.UTC())
 	}
+
+	for i := 0; i < len(accounts); i++ {
+		select {
+		case acc := <-respCh:
+			response = append(response, acc)
+		case errResp := <-errCh:
+			close(respCh)
+			close(errCh)
+			return httpResponse(c, fiber.StatusInternalServerError, errResp.Error())
+		case <-time.After(time.Second * 15):
+			return httpResponse(c, fiber.StatusRequestTimeout, "request took too long")
+		}
+	}
+
+	close(errCh)
+
+	// Sort accounts by ID. This works because account ID's are created in sequence in the database
+	sort.Slice(response, func(i, j int) bool { return response[i].ID < response[j].ID })
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }

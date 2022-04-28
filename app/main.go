@@ -14,8 +14,8 @@ const (
 
 var (
 	ALGOD_ADDRESS, PS_TOKEN_KEY, PS_TOKEN string
-	//go:embed auth/api.yaml
-	API_CREDENTIALS_FILE []byte
+	//go:embed secrets/api.yaml
+	API_SECRETS_FILE []byte
 )
 
 // Read credentials from embedded api.yaml file
@@ -25,7 +25,7 @@ func init() {
 		err  error
 	)
 
-	err = yaml.Unmarshal(API_CREDENTIALS_FILE, &data)
+	err = yaml.Unmarshal(API_SECRETS_FILE, &data)
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func init() {
 
 func main() {
 	db := NewDBConn(DB_FILENAME)
-	bc := NewAlgodClient(ALGOD_ADDRESS, PS_TOKEN_KEY, PS_TOKEN)
+	bc := NewBlockchainClient(ALGOD_ADDRESS, PS_TOKEN_KEY, PS_TOKEN)
 	api := NewRestAPI(APP_NAME, db, bc)
 
 	api.Run(PORT)
