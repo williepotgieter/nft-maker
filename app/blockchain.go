@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -18,17 +17,19 @@ import (
 )
 
 type Blockchain struct {
-	client *algod.Client
+	client    *algod.Client
+	sourceAcc string
 }
 
 type AlgoTransaction struct {
-	TransactionInfo []byte           `json:"transaction_info"`
-	DecodedNote     string           `json:"decoded_note"`
-	AmountSent      types.MicroAlgos `json:"amount_sent"`
-	Fee             types.MicroAlgos `json:"fee"`
+	FromAccount string `json:"from_account"`
+	ToAccount   string `json:"to_account"`
+	DecodedNote string `json:"decoded_note"`
+	AmountSent  uint64 `json:"amount_sent"`
+	Fee         uint64 `json:"fee"`
 }
 
-func NewBlockchainClient(algodAddress, psTokenKey, psToken string) *Blockchain {
+func NewBlockchainClient(algodAddress, psTokenKey, psToken, testnetSourceAcc string) *Blockchain {
 	var (
 		commonClient *common.Client
 		algodClient  *algod.Client
@@ -53,7 +54,7 @@ func NewBlockchainClient(algodAddress, psTokenKey, psToken string) *Blockchain {
 	log.Printf("algod time since last round: %d\n", nodeStatus.TimeSinceLastRound)
 	log.Printf("algod catchup: %d\n", nodeStatus.CatchupTime)
 
-	return &Blockchain{algodClient}
+	return &Blockchain{algodClient, testnetSourceAcc}
 }
 
 func CreateAlgorandAccount() (address, passphrase string, privatekey ed25519.PrivateKey, err error) {
@@ -133,7 +134,6 @@ func (bc *Blockchain) SubmitTxn(txID string, signedTxn []byte) (txInfo AlgoTrans
 	var (
 		sendResponse string
 		confirmedTxn models.PendingTransactionInfoResponse
-		txnJSON      []byte
 	)
 
 	sendResponse, err = bc.client.SendRawTransaction(signedTxn).Do(context.Background())
@@ -148,16 +148,12 @@ func (bc *Blockchain) SubmitTxn(txID string, signedTxn []byte) (txInfo AlgoTrans
 		return
 	}
 
-	txnJSON, err = json.MarshalIndent(confirmedTxn.Transaction.Txn, "", "\t")
-	if err != nil {
-		return
-	}
-
 	txInfo = AlgoTransaction{
-		TransactionInfo: txnJSON,
-		DecodedNote:     string(confirmedTxn.Transaction.Txn.Note),
-		AmountSent:      confirmedTxn.Transaction.Txn.Amount,
-		Fee:             confirmedTxn.Transaction.Txn.Fee,
+		FromAccount: confirmedTxn.Transaction.Txn.Sender.String(),
+		ToAccount:   confirmedTxn.Transaction.Txn.Receiver.String(),
+		DecodedNote: string(confirmedTxn.Transaction.Txn.Note),
+		AmountSent:  uint64(confirmedTxn.Transaction.Txn.Amount),
+		Fee:         uint64(confirmedTxn.Transaction.Txn.Fee),
 	}
 
 	return

@@ -108,6 +108,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/{userId}/{sourceAcc}/transfer": {
+            "post": {
+                "description": "Transfer Algorand from one account to another",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Make an Algorand transfer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Source account",
+                        "name": "sourceAcc",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Transfer amount (in micro Algo)",
+                        "name": "amount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Destination address",
+                        "name": "to_addr",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Transaction note",
+                        "name": "tx_note",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.TransferBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.AlgoTransaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.HTTPResp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.HTTPResp"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Lists all users stored in the database",
@@ -345,11 +416,34 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
+                "balance": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                }
+            }
+        },
+        "main.AlgoTransaction": {
+            "type": "object",
+            "properties": {
+                "amount_sent": {
+                    "type": "integer"
+                },
+                "decoded_note": {
+                    "type": "string"
+                },
+                "fee": {
+                    "type": "integer"
+                },
+                "from_account": {
+                    "type": "string"
+                },
+                "to_account": {
+                    "type": "string"
                 }
             }
         },
@@ -360,6 +454,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.TransferBody": {
+            "type": "object",
+            "properties": {
+                "tx_note": {
                     "type": "string"
                 }
             }

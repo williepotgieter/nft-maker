@@ -8,9 +8,19 @@ import (
 	"sort"
 	"time"
 
+	_ "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
+
+type TransferQuery struct {
+	Amount uint64 `query:"amount"`
+	ToAddr string `query:"to_addr"`
+}
+
+type TransferBody struct {
+	TxNote string `json:"tx_note"`
+}
 
 type AccountInfo struct {
 	UserID  uint   `json:"user_id"`
@@ -182,20 +192,49 @@ func (s *RestApi) HandleGetUserAccounts(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// HandleTransferAlgo godoc
+// @Summary      Make an Algorand transfer
+// @Description  Transfer Algorand from one account to another
+// @Tags         accounts
+// @Produce      json
+// @Param        userId   path      int  true  "User ID"
+// @Param        sourceAcc   path      string  true  "Source account"
+// @Param        amount   query      uint64  true  "Transfer amount (in micro Algo)"
+// @Param        to_addr   query      string  true  "Destination address"
+// @Param        tx_note   body      TransferBody  true  "Transaction note"
+// @Success      200  {object} AlgoTransaction
+// @Failure      400  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /accounts/{userId}/{sourceAcc}/transfer [post]
 func (s *RestApi) HandleTransferAlgo(c *fiber.Ctx) error {
-	accAddress := c.Params("accAddress")
+	var (
+		sourceAcc     = c.Params("sourceAcc")
+		transferQuery = new(TransferQuery)
+		transferBody  = new(TransferBody)
+		privateKey    ed25519.PrivateKey
+		err           error
+	)
 
-	privateKey, err := s.GetUserAccountPrivateKey(accAddress)
+	err = c.QueryParser(transferQuery)
+	if err != nil {
+		return httpResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	err = c.BodyParser(transferBody)
+	if err != nil {
+		return httpResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	privateKey, err = s.GetUserAccountPrivateKey(sourceAcc)
 	if err != nil {
 		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Demo transaction
 	txn, err := s.Blockchain.BuildAlgoTransferTxn(
-		100000,
-		accAddress,
-		"ZL7MKKYJS56YT26XUNT25JY222REGXCR6OEKDFDPYXQVN36QTTW23YQ7WY",
-		"My first Algo transaction!")
+		transferQuery.Amount,
+		sourceAcc,
+		transferQuery.ToAddr,
+		transferBody.TxNote)
 	if err != nil {
 		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
 	}

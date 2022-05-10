@@ -4,16 +4,36 @@ definitions:
     properties:
       address:
         type: string
+      balance:
+        type: integer
       created_at:
         type: string
       id:
         type: integer
+    type: object
+  main.AlgoTransaction:
+    properties:
+      amount_sent:
+        type: integer
+      decoded_note:
+        type: string
+      fee:
+        type: integer
+      from_account:
+        type: string
+      to_account:
+        type: string
     type: object
   main.HTTPResp:
     properties:
       code:
         type: integer
       message:
+        type: string
+    type: object
+  main.TransferBody:
+    properties:
+      tx_note:
         type: string
     type: object
   main.UserPassword:
@@ -62,6 +82,54 @@ info:
   title: NFT Maker API
   version: 0.0.1
 paths:
+  /accounts/{userId}/{sourceAcc}/transfer:
+    post:
+      description: Transfer Algorand from one account to another
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Source account
+        in: path
+        name: sourceAcc
+        required: true
+        type: string
+      - description: Transfer amount (in micro Algo)
+        in: query
+        name: amount
+        required: true
+        type: integer
+      - description: Destination address
+        in: query
+        name: to_addr
+        required: true
+        type: string
+      - description: Transaction note
+        in: body
+        name: tx_note
+        required: true
+        schema:
+          $ref: '#/definitions/main.TransferBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.AlgoTransaction'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.HTTPResp'
+      summary: Make an Algorand transfer
+      tags:
+      - accounts
   /accounts/{userId}/all:
     get:
       description: List all accounts for a specific user

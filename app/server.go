@@ -68,7 +68,7 @@ func (s *RestApi) setupV1Routes() {
 	// Accounts endpoints
 	accounts := v1.Group("/accounts")
 	accounts.Post("/:userId/new", s.HandleCreateNewAlgorandAccount)
-	accounts.Post("/:userId/:accAddress/transfer", s.HandleTransferAlgo)
+	accounts.Post("/:userId/:sourceAcc/transfer", s.HandleTransferAlgo)
 	accounts.Get("/:userId/all", s.HandleGetUserAccounts)
 }
 
