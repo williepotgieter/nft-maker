@@ -19,5 +19,4 @@ bin/*
 *.db
 
 # Credentials
-api.yml
-api.yaml
+app/secrets/*
