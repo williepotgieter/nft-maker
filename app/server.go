@@ -70,6 +70,7 @@ func (s *RestApi) setupV1Routes() {
 	accounts.Post("/:userId/new", s.HandleCreateNewAlgorandAccount)
 	accounts.Post("/:userId/:sourceAcc/transfer", s.HandleTransferAlgo)
 	accounts.Get("/:userId/all", s.HandleGetUserAccounts)
+	accounts.Get("/history", s.HandleGetAccountHistory)
 }
 
 func (s *RestApi) setupSwagger(port uint16) {

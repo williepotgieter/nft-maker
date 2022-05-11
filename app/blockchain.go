@@ -5,10 +5,12 @@ import (
 	"crypto/ed25519"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/algorand/go-algorand-sdk/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/client/v2/common"
 	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
+	"github.com/algorand/go-algorand-sdk/client/v2/indexer"
 	"github.com/algorand/go-algorand-sdk/crypto"
 	"github.com/algorand/go-algorand-sdk/future"
 	"github.com/algorand/go-algorand-sdk/mnemonic"
@@ -18,6 +20,7 @@ import (
 
 type Blockchain struct {
 	client    *algod.Client
+	idxClient *indexer.Client
 	sourceAcc string
 }
 
@@ -29,14 +32,17 @@ type AlgoTransaction struct {
 	Fee         uint64 `json:"fee"`
 }
 
-func NewBlockchainClient(algodAddress, psTokenKey, psToken, testnetSourceAcc string) *Blockchain {
+func NewBlockchainClient(algodAddress, indexerAddress, psTokenKey, psToken, testnetSourceAcc string) *Blockchain {
 	var (
-		commonClient *common.Client
-		algodClient  *algod.Client
-		nodeStatus   models.NodeStatus
-		err          error
+		commonClient, idxCommonClient *common.Client
+		algodClient                   *algod.Client
+		indexerClient                 *indexer.Client
+		hc                            *indexer.HealthCheck
+		nodeStatus                    models.NodeStatus
+		err                           error
 	)
 
+	// Algod client
 	commonClient, err = common.MakeClient(algodAddress, psTokenKey, psToken)
 	if err != nil {
 		panic(fmt.Errorf("failed to make common Algod client: %s\n", err))
@@ -54,7 +60,22 @@ func NewBlockchainClient(algodAddress, psTokenKey, psToken, testnetSourceAcc str
 	log.Printf("algod time since last round: %d\n", nodeStatus.TimeSinceLastRound)
 	log.Printf("algod catchup: %d\n", nodeStatus.CatchupTime)
 
-	return &Blockchain{algodClient, testnetSourceAcc}
+	// Indexer client
+	idxCommonClient, err = common.MakeClient(indexerAddress, psTokenKey, psToken)
+	if err != nil {
+		panic(fmt.Errorf("failed to make indexer client: %s\n", err))
+	}
+
+	indexerClient = (*indexer.Client)(idxCommonClient)
+
+	hc = indexerClient.HealthCheck()
+	_, err = hc.Do(context.Background())
+	if err != nil {
+		panic(fmt.Errorf("indexer client health check failed: %s\n", err))
+	}
+	log.Println("indexer client health check passed!")
+
+	return &Blockchain{algodClient, indexerClient, testnetSourceAcc}
 }
 
 func CreateAlgorandAccount() (address, passphrase string, privatekey ed25519.PrivateKey, err error) {
@@ -155,6 +176,20 @@ func (bc *Blockchain) SubmitTxn(txID string, signedTxn []byte) (txInfo AlgoTrans
 		AmountSent:  uint64(confirmedTxn.Transaction.Txn.Amount),
 		Fee:         uint64(confirmedTxn.Transaction.Txn.Fee),
 	}
+
+	return
+}
+
+func (bc *Blockchain) GetAccountHistory(address, startTime string) (history models.TransactionsResponse, err error) {
+	start, err := time.Parse(time.RFC3339, startTime)
+	if err != nil {
+		return
+	}
+
+	history, err = bc.idxClient.SearchForTransactions().
+		AddressString(address).
+		AfterTimeString(start.Format(time.RFC3339)).
+		Do(context.Background())
 
 	return
 }

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	_ "github.com/algorand/go-algorand-sdk/client/v2/common/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -20,6 +21,11 @@ type TransferQuery struct {
 
 type TransferBody struct {
 	TxNote string `json:"tx_note"`
+}
+
+type TxHistoryQuery struct {
+	Address   string `query:"address"`
+	StartTime string `query:"start_time"`
 }
 
 type AccountInfo struct {
@@ -250,4 +256,24 @@ func (s *RestApi) HandleTransferAlgo(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(txInfo)
+}
+
+func (s *RestApi) HandleGetAccountHistory(c *fiber.Ctx) error {
+	var (
+		q       = new(TxHistoryQuery)
+		history models.TransactionsResponse
+		err     error
+	)
+
+	err = c.QueryParser(q)
+	if err != nil {
+		return httpResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	history, err = s.Blockchain.GetAccountHistory(q.Address, "2020-06-03T10:00:00-05:00")
+	if err != nil {
+		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(history)
 }
