@@ -258,6 +258,17 @@ func (s *RestApi) HandleTransferAlgo(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(txInfo)
 }
 
+// HandleGetAccountHistory godoc
+// @Summary      Get account history
+// @Description  Get full history of account since a specified date
+// @Tags         accounts
+// @Produce      json
+// @Param        address   query      string  true  "Address"
+// @Param        start_time   query      string  true  "Start date (eg. 2021-12-22)"
+// @Success      200  {object} AlgoTransaction
+// @Failure      400  {object}  HTTPResp
+// @Failure      500  {object}  HTTPResp
+// @Router       /accounts/history [get]
 func (s *RestApi) HandleGetAccountHistory(c *fiber.Ctx) error {
 	var (
 		q       = new(TxHistoryQuery)
@@ -270,7 +281,7 @@ func (s *RestApi) HandleGetAccountHistory(c *fiber.Ctx) error {
 		return httpResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	history, err = s.Blockchain.GetAccountHistory(q.Address, "2020-06-03T10:00:00-05:00")
+	history, err = s.Blockchain.GetAccountHistory(q.Address, q.StartTime)
 	if err != nil {
 		return httpResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
